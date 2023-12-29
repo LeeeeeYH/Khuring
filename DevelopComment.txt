@@ -1,0 +1,110 @@
+-------------------------------코드 확인 꿀팁-------------------------------
+(구현이 궁금한 함수위에서) (Alt + )F12   ==   함수정의로 가기 (엿보기)
+Ctrl + -   ==  이전 커서위치로 이동 (함수 확인후 다시 돌아갈때 유용)
+Shift + F12  ==  다음 변수, 함수가 참조된 부분 모두찾기
+-------------------------------------------------------------------------------
+
+--- 6주차까지 ---
+update() 함수 직접구현된 부분 -> 함수화
+시각적으로 개선된효과, 수정시 편리함
+
+button text는 GetComponent<>() 함수가 아닌 GetComponentInChildren<>() 함수 써야함
+
+점수판 (ScoreBoard) 표로 제작 ( 다른 아이디어 환영 )
+
+
+--- 7주차 ---
+Round 진행, Round별 점수계산 및 점수판에 표시 구현
+
+버튼과 다른 UI 스크립트 분리 ( UIController -> UIButtonController + UIScoreWriter )
+∵ 점수판UI 비활성화하는 초기화를 UI스크립트마다 반복해 오류발생
+GameDirector, ButtonController, UIScoreWriter 모두 Hierachy의 GameDirector에 Component로 존재
+
+Button 관련 버그 수정 (기범쓰 발견)
+
+아웃되는 공은 collider2D를 해제해 부딪히지 않는 스톤으로 변경
+
+일부 코드정리, 변수명, 변수데이터 정리
+
+
+--- 8주차 ---
+- 추가 -
+NextButton : 스톤 딜리버리 후, 라운드 종료 후 버튼 클릭시 다음 스톤으로 진행
+(기존의 도착된 스톤, 하우스상황을 볼 수 없도록 곧바로 자동 진행하는 부분을 개선)
+떄문에 Button과 Director의 상호작용으로 인해 자잘한 Set함수 소수 추가
++
+기존 오류와 같은 오류로 UINextButton스크립트 추가
+
+일부 Script별 실행순서 설정
+(SetActive() 실행문제때문에 현재 GameDirector->UINextButtonController 두 스크립트만 설정) 
+
+- 수정 -
+CameraController 에 SetNowStone() 추가
+(기존엔 매번 update()진행마다 CurStone을 Find() --> 기능상 문제는 없지만 성능 향상)
+(진행중 버그있으면 제보바람)
+1Round 진행 후 생기는 Camera 버그(CurStone을 캐치하지 못하는 것 같음) --> SetNowStone()구현으로 자동 구현
+
+ Camera가 House를 비출때 위치, 크기개선
+(House만 비춤 --> HogLine부터 BackLine까지 모두 관찰 가능)
+
+RoundInit시 Stone Rotation 초기화
+
+
+--- 10주차 ---
+- 추가 -
+UIManager 스크립트 : 너무많은 UI를 한번에 관리
+기존 스크립트(이전모든 UI관련)는 통합후 삭제
+
+<GameManager>(전 <GameDirector>), <UIManager>
+Singleton개념 추가
+
+1Round만 진행 후 정상진행이 안되는 버그 해결(Stone 내부 변수 초기화, StoneController enable관련 문제)
+
+<StoneController>
+OscillateNum(Num, Size)함수 추가
+0 ~ Size만큼 진동하는 함수 --> 파워, 토크 입력시 사용
+
+- 수정 -
+<GameDirector> --> <GameManager>로 이름 변경(보편적인 Unity상에서의 이름으로)
+
+비효율적인 Find()함수 최소화 --> public 변수에 Unity상에서 직접 할당
+
+- 질문&토의 -
+<StoneController>
+Torque * -2 * CurrentForce / StartingForce ?
+스위핑을 하지않을때 울퉁불퉁 빙판으로 들어서므로 drag를 += 0.01이아닌 drag = 0.1f로 해야하지않나
+파워, 회전력 입력시 최대고정이아닌 파워가 커졌다 작아졌다 왕복하는 방법이 어떤지 - O
+파워 최소치, 최대치 토의
+현재 딜리버리 과정 구성 토의
+
+
+--- 11주차 ---
+- 추가 -
+Stone들의 Tag를 Stone으로 설정(Stone끼리의 충돌시 감지를 위함)
+
+Replay 기능(미완성)
+<GameManager>에서 struct ReplayValue 추가 -> 이전 샷의 값들을 저장
+<StoneController>에서 ReplayMode개념 추가 -> 아닐땐 이전과 같이, 맞을땐 이미 저장된 값으로 진행
+
+
+- 질문&토의 -
+Torque * -2 * CurrentForce / StartingForce ?
+스위핑을 하지않을때 울퉁불퉁 빙판으로 들어서므로 drag를 += 0.01이아닌 drag = 0.1f로 해야하지않나
+파워 최소치, 최대치 토의
+현재 딜리버리 과정 구성 토의
+경로저장을 경기전부다 저장할지, 이전스톤만 저장할지
+
+
+--- 12주차 ---
+- 추가 -
+★ReplayMode 대부분 구현(스톤 일정하게 이동하는것 확인) ★
+기존 코드에서 ReplayMode들을 추가해 Normal모드인지 ReplayMode인지 구별 후 코드진행
+<GameManager>
+Replay시 이전값, 현재값, 값 복사 등을 위한 각종 변수및 struct(Rb2D, ReplayValue)추가
+Replay버튼추가
+
+
+- 수정 -
+<StoneController>
+Update를 Replay에서의 일정한 계산을 반영하기 위해 FixedUpdate 병렬사용
+Torque 게이지 a, s키 나눈 방법을 하나의 키로 통합
